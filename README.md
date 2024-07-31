@@ -22,3 +22,10 @@ User Roles:
  Team Lead: Project monitoring, access management, project creation and archiving
  Team Member: View project details, user privileges
  User: Request project access, password changes, generate usage reports
+
+ Technologies Used:
+
+ Python
+ Flask
+ MySQL
+ HTML
