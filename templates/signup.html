@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ebf4f8;
+        }
+
+        .container {
+            width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+            border-radius: 20px;
+}
+
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            display: block;
+            width: calc(100% - 20px); /* Adjusted width to align with the button */
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+}
+
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            background-color: #333;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #444;
+  
+        }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+        #password-strength {
+            margin-top: 10px;
+            height: 10px;
+            background-color: lightgray;
+            width: 0%;
+        }
+        #retype-status {
+            margin-top: 10px;
+        }
+        button:disabled {
+            background-color: lightgray;
+            color: gray;
+        }
+        #password-policy {
+            font-size: 0.8em;
+            color: gray;
+            margin-top: 5px;
+        }
+    </style>
+
+    <title>Sign Up</title>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>Password Management System - Sign Up</h1>
+        <!-- User Sign Up Form -->
+        <form method="POST" action="{{ url_for('register') }}" onsubmit="return validateForm()">
+            <div id="error" class="error">{{ error }}</div>
+            <input type="hidden" name="source_url" value="{{ request.path }}"> 
+            <label for="register-username">Username:</label>
+            <input type="text" name="register-username" required>
+            <label for="register-password">Password:</label>
+            <input type="password" name="register-password" id="password" required oninput="checkPasswordStrength()">
+            <div id="password-policy">Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, one number, and one special character.</div>
+            <label for="register-password-retype">Retype Password:</label>
+            <input type="password" name="register-password-retype" id="register-password-retype" required oninput="checkRetypePassword()">
+            <div id="password-strength"></div>
+            <div id="retype-status"></div>
+            <button type="submit" id="register-button" disabled>Register</button>
+        </form>
+        <!-- Link back to the Login page -->
+        <p style="text-align: center; margin-top: 10px;">Already have an account? <a href="login">Login</a></p>
+    </div>
+
+    <script>
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strengthMeter = document.getElementById('password-strength');
+
+            // Reset meter
+            strengthMeter.style.width = '0%';
+
+            // Check password strength
+            let strength = 0;
+            if (password.length >= 8) {
+                strength += 20;
+            }
+            if (/[a-z]/.test(password)) {
+                strength += 20;
+            }
+            if (/[A-Z]/.test(password)) {
+                strength += 20;
+            }
+            if (/\d/.test(password)) {
+                strength += 20;
+            }
+            if (/[^a-zA-Z0-9]/.test(password)) {
+                strength += 20;
+            }
+
+            // Update meter width and color
+            strengthMeter.style.width = strength + '%';
+            if (strength <= 20) {
+                strengthMeter.style.backgroundColor = 'red';
+            } else if (strength <= 40) {
+                strengthMeter.style.backgroundColor = 'orange';
+            } else if(strength <= 80){
+                strengthMeter.style.backgroundColor = 'yellow';
+            }
+            else if(strength <= 100){
+                strengthMeter.style.backgroundColor = 'green';
+            }
+
+            // Check retype password
+            checkRetypePassword();
+        }
+
+        function checkRetypePassword() {
+            const password = document.getElementById('password').value;
+            const retypePassword = document.getElementById('register-password-retype').value;
+            const retypeStatus = document.getElementById('retype-status');
+
+            if (password === retypePassword && retypePassword !== '') {
+                retypeStatus.textContent = 'Passwords match';
+                retypeStatus.style.color = 'green';
+            } else {
+                retypeStatus.textContent = 'Passwords do not match';
+                retypeStatus.style.color = 'red';
+            }
+
+            // Check if both password policy and password retype are valid
+            const strength = getStrength();
+            const isValidRetype = password === retypePassword && retypePassword !== '';
+            document.getElementById('register-button').disabled = !(strength >= 100 && isValidRetype);
+        }
+
+        function getStrength() {
+            const password = document.getElementById('password').value;
+            let strength = 0;
+            if (password.length >= 8) {
+                strength += 20;
+            }
+            if (/[a-z]/.test(password)) {
+                strength += 20;
+            }
+            if (/[A-Z]/.test(password)) {
+                strength += 20;
+            }
+            if (/\d/.test(password)) {
+                strength += 20;
+            }
+            if (/[^a-zA-Z0-9]/.test(password)) {
+                strength += 20;
+            }
+            return strength;
+        }
+
+        function validateForm() {
+            const strength = getStrength();
+            const retypePassword = document.getElementById('register-password-retype').value;
+            return strength >= 80 && retypePassword === document.getElementById('password').value && retypePassword !== '';
+        }
+    </script>
+</body>
+</html>

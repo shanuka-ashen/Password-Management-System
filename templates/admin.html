@@ -1,0 +1,556 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+section {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+section h2 {
+    color: #333;
+    margin-top: 0;
+}
+
+section button {
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+section button:hover {
+    background-color: #0056b3;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+td a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+td a:hover {
+    text-decoration: underline;
+}
+
+.hidden {
+    display: none;
+}
+
+.error {
+    color: red;
+    margin-bottom: 10px;
+}
+
+.user-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+
+.dropdown-menu {
+            position: absolute;
+            top: 45px;
+            right: 50px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: none;
+            padding: 10px;
+            z-index: 1;
+        }
+
+.dropdown-menu a {
+    display: block;
+    padding: 5px 10px;
+    color: #333;
+    text-decoration: none;
+}
+
+.dropdown-menu a:hover {
+    background-color: #f5f5f5;
+}
+
+    </style>
+</head>
+<body>
+
+    <!-- User Icon -->
+    <div class="user-icon" onclick="toggleDropdownMenu()">
+        <img src="/static/images/user.png" alt="User Icon" width="35" height="35" style="padding: 10px;">
+    </div>
+
+    <!-- Dropdown Menu -->
+    <div class="dropdown-menu" id="dropdownMenu">
+        <a href="{{ url_for('reset_password_page') }}">Reset Password</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+    <h1>Welcome Admin: {{ session['username'] }}!</h1>
+    
+
+    <!-- User Management Section -->
+<section>
+    <h2>User Management</h2>
+    <div id="error" class="error">{{ error }}</div>
+    <button onclick="toggleSection('add-user-section')">Add User</button>
+    
+<div class="hidden" id="add-user-section">
+    <!-- Add User Section -->
+    <section>
+        <form method="POST" action="{{ url_for('register') }}">
+            <input type="hidden" name="source_url" value="{{ request.path }}">
+            <label for="register-username">Username:</label>
+            <input type="text" name="register-username" required>
+            <label for="register-password">Password:</label>
+            <input type="password" name="register-password" required>
+            <button type="submit">Register</button>
+        </form>
+    </section>
+</div>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+            {% if user.username %}  <!-- Check if username and role are not empty -->
+                <tr>
+                    <td><span>{{ user.username }}</span></td> <!-- Replace input with span -->
+                    <td>
+                        {% if user.role == 'A' %}
+                            Admin
+                        {% elif user.role == 'TM' %}
+                            Team Member
+                        {% elif user.role == 'TL' %}
+                            Team Lead
+                        {% elif user.role == 'U' %}
+                            User
+                        {% elif user.role == 'B' %}
+                            Blocked
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="javascript:void(0);" onclick="toggleSection('edit-section-{{ user.username }}')">Edit</a>
+                        <div class="hidden" id="edit-section-{{ user.username }}">
+                            <!-- User Edit Section -->
+                            <section>
+                                <form method="POST" action="{{ url_for('admin_update_user', username=user.username) }}">
+                                    <!-- <label for="edit-username">Username:</label> -->
+                                    <!-- <span>{{ user.username }}</span> Display username as text -->
+                                    <input type="hidden" name="source_url" value="{{ request.path }}">
+                                    <input type="hidden" name="edit-username" value="{{ user.username }}">
+                                    <label for="edit-role">Role:</label>
+                                    <select name="edit-role" required>
+                                        <option value="A" {% if user.role == 'A' %}selected{% endif %}>Admin</option>
+                                        <option value="TM" {% if user.role == 'TM' %}selected{% endif %}>Team Member</option>
+                                        <option value="TL" {% if user.role == 'TL' %}selected{% endif %}>Team Lead</option>
+                                        <option value="U" {% if user.role == 'U' %}selected{% endif %}>User</option>
+                                        <option value="B" {% if user.role == 'B' %}selected{% endif %}>Block</option>
+                                    </select>
+                                    <button type="submit">Update User</button>
+                                </form>
+                            </section>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="javascript:void(0);" onclick="toggleSection('delete-section-{{ user.username }}')">Delete</a>
+                        <div class="hidden" id="delete-section-{{ user.username }}">
+                            <!-- User Deletion Section -->
+                            <section>
+                                <form method="POST" action="{{ url_for('admin_delete_user', username=user.username) }}">
+                                    <input type="hidden" name="source_url" value="{{ request.path }}">
+                                    <text class="hidden">{{ user.username }}</text> <!-- Display username as text -->
+                                    <button type="submit">Delete User</button>
+                                </form>
+                            </section>
+                        </div>
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+
+    
+    
+    </section>
+
+    <!-- Project Management Section -->
+    <section>
+        <h2>Project Management</h2>
+        <button onclick="toggleSection('add-project-section')">Add Project</button>
+    <button onclick="toggleSection('delete-project-section')">Delete Project</button>
+    <div class="hidden" id="add-project-section">
+        <!-- Add Project Section -->
+        <section>
+            <form method="POST" action="{{ url_for('add_project') }}">
+                <input type="hidden" name="source_url" value="{{ request.path }}">
+                <label for="project-name">Project Name:</label>
+                <input type="text" name="project-name" required>
+                <button type="submit">Add Project</button>
+            </form>
+        </section>
+    </div>
+    <div class="hidden" id="delete-project-section">
+        <!-- Delete Project Section -->
+        <section>
+            <form method="POST" action="{{ url_for('delete_project') }}">
+                <input type="hidden" name="source_url" value="{{ request.path }}">
+                <label for="delete-project-name">Project Name:</label>
+                <select name="delete-project-name" required>
+                    {% for project in projects %}
+                        <option value="{{ project.name }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit">Delete Project</button>
+            </form>
+        </section>
+
+    </div>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Assigned Users</th>
+                    <th>Grant Permission</th>
+                    <th>Revoke Permission</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in projects %}
+                <tr>
+                    <td>{{ project.name }}</td>
+                    <td>
+                        {% for assigned_project in assigned_projects %}
+                            {% if assigned_project.projectname == project.name %}
+                                {{ assigned_project.username }}<br>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="javascript:void(0);" onclick="toggleSection('grant-section-{{ project.name }}')">Grant</a>
+                        <div class="hidden" id="grant-section-{{ project.name }}">
+                            <!-- Grant Permission Section -->
+                            <section>
+                                <form method="POST" action="{{ url_for('grant_permission', projectname=project.name) }}">
+                                    <input type="hidden" name="source_url" value="{{ request.path }}">
+                                    <label for="grant-username">Username:</label>
+                                    <select name="grant-username" required>
+                                        {% for user in users %}
+                                            <option value="{{ user.username }}">{{ user.username }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit">Grant Permission</button>
+                                </form>
+                            </section>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="javascript:void(0);" onclick="toggleSection('revoke-section-{{ project.name }}')">Revoke</a>
+                        <div class="hidden" id="revoke-section-{{ project.name }}">
+                            <!-- Revoke Permission Section -->
+                            <section>
+                                <form method="POST" action="{{ url_for('revoke_permission', projectname=project.name) }}">
+                                    <input type="hidden" name="source_url" value="{{ request.path }}">
+                                    <label for="revoke-username">Username:</label>
+                                    <select name="revoke-username" required>
+                                        {% for assigned_project in assigned_projects %}
+                                            {% if assigned_project.projectname == project.name %}
+                                                <option value="{{ assigned_project.username }}">{{ assigned_project.username }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit">Revoke Permission</button>
+                                </form>
+                            </section>
+                        </div>
+                    </td>
+
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+
+<!-- Project Password Management Section -->
+<section>
+    <h2>Project Password Management</h2>
+    <!-- Add Password Button -->
+    <button onclick="toggleSection('add-section')">Add Password</button>
+    <div class="hidden" id="add-section">
+        <!-- Add Password Section -->
+        <section>
+            <form method="POST" action="{{ url_for('admin_add_password') }}">
+                <input type="hidden" name="source_url" value="{{ request.path }}">
+                <input type="hidden" name="table_name" value="ProjectPassword">
+                <label for="add-password-project">Project:</label>
+                <select name="project-name" required>
+                    {% for project in projects %}
+                        <option value="{{ project['name'] }}">{{ project['name'] }}</option>
+                    {% endfor %}
+                </select>
+                <label for="add-password-purpose">Purpose:</label>
+                <input type="text" name="add-password-purpose" required>
+                <label for="add-password-value">Password:</label>
+                <input type="text" name="add-password-value" id="edit-password-value-{{ sectionCount }}" required>
+                <button type="submit">Add Password</button>
+            </form>
+        </section>
+    </div>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Project</th>
+                <th>Purpose</th>
+                <th>Passwords</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project, passwords in grouped_passwords.items() %}
+            {% for password_info in passwords %}
+            <tr>
+                {% if loop.index == 1 %}
+                <td rowspan="{{ passwords|length }}">{{ project }}</td>
+                {% endif %}
+                <td>{{ password_info.purpose }}</td>
+                <td>{{ password_info.password }}</td>
+                <td>
+                    <a href="javascript:void(0);" onclick="toggleSection('edit-section-{{ project }}-{{ loop.index }}')">Edit</a>
+                    <div class="hidden" id="edit-section-{{ project }}-{{ loop.index }}">
+                        <!-- Edit Password Section -->
+                        <section>
+                            <form method="POST" action="{{ url_for('admin_edit_password', project_name=project, purpose=password_info.purpose) }}">
+                                <input type="hidden" name="table_name" value="ProjectPassword">
+                                <input type="hidden" name="source_url" value="{{ request.path }}">
+                                <label for="edit-password-purpose">New Purpose:</label>
+                                <input type="text" name="edit-password-purpose" required>
+                                <label for="edit-password-value">New Password:</label>
+                                <input type="text" name="edit-password-value" id="edit-password-value-{{ loop.index }}" required>
+                                <button type="submit">Edit Password</button>
+                            </form>
+                        </section>
+                    </div>
+                </td>
+                <td>
+                    <a href="javascript:void(0);" onclick="toggleSection('delete-section-{{ project }}-{{ loop.index }}')">Delete</a>
+                    <div class="hidden" id="delete-section-{{ project }}-{{ loop.index }}">
+                        <!-- Delete Password Section -->
+                        <section>
+                            <form method="POST" action="{{ url_for('admin_delete_password', project_name=project, purpose=password_info.purpose) }}">
+                                <input type="hidden" name="source_url" value="{{ request.path }}">
+                                <input type="hidden" name="table_name" value="ProjectPassword">
+                                <button type="submit">Delete Password</button>
+                            </form>
+                        </section>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+
+
+
+<!-- User Password Management Section -->
+<section>
+    <h2>User Password Management</h2>
+    <!-- Add Password Button -->
+    <button onclick="toggleSection('user-pw-section')">Add Password</button>
+    <div class="hidden" id="user-pw-section">
+        <!-- Add Password Section -->
+        <section>
+            <form method="POST" action="{{ url_for('admin_add_password') }}">
+                <input type="hidden" name="source_url" value="{{ request.path }}">
+                <input type="hidden" name="table_name" value="UserPassword">
+                <label for="add-password-purpose">Purpose:</label>
+                <input type="text" name="add-password-purpose" required>
+                <label for="add-password-value">Password:</label>
+                <input type="text" name="add-password-value" id="edit-password-value" required>
+                <button type="submit">Add Password</button>
+            </form>
+        </section>
+    </div>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Purpose</th>
+                <th>Passwords</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for password_info in user_passwords %}
+            <tr>
+                <td>{{ password_info.purpose }}</td>
+                <td>{{ password_info.password }}</td>
+                <td>
+                    <a href="javascript:void(0);" onclick="toggleSection('edit-section-{{ loop.index }}')">Edit</a>
+                    <div class="hidden" id="edit-section-{{ loop.index }}">
+                        <!-- Edit Password Section -->
+                        <section>
+                            <form method="POST" action="{{ url_for('admin_edit_password', project_name='q', purpose=password_info.purpose) }}">
+                                <input type="hidden" name="source_url" value="{{ request.path }}">
+                                <input type="hidden" name="table_name" value="UserPassword">
+                                <label for="edit-password-purpose">New Purpose:</label>
+                                <input type="text" name="edit-password-purpose" required>
+                                <label for="edit-password-value">New Password:</label>
+                                <input type="text" name="edit-password-value" id="edit-password-value-{{ loop.index }}" required>
+                                <button type="submit">Edit Password</button>
+                            </form>
+                        </section>
+                    </div>
+                </td>
+                <td>
+                    <a href="javascript:void(0);" onclick="toggleSection('delete-section-{{ loop.index }}')">Delete</a>
+                    <div class="hidden" id="delete-section-{{ loop.index }}">
+                        <!-- Delete Password Section -->
+                        <section>
+                            <form method="POST" action="{{ url_for('admin_delete_password', project_name='q', purpose=password_info.purpose) }}">
+                                <input type="hidden" name="source_url" value="{{ request.path }}">
+                                <input type="hidden" name="table_name" value="UserPassword">
+                                <button type="submit">Delete Password</button>
+                            </form>
+                        </section>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<!-- Password Generator Box -->
+<div style="position: fixed; top: 19%; right: 1.3%; transform: translateY(-50%); padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9;">
+    <label for="edit-password-purpose">Generate Random Password: </label>
+    <input type="text" id="generated-password" readonly style="width: 200px; padding: 5px; margin-right: 5px;">
+    <button onclick="generateRandomPassword('generated-password')">Generate</button>
+    <button onclick="copyToClipboard('generated-password')">Copy</button>
+</div>
+
+<script>
+    function generateRandomPassword(inputId) {
+            const uppercaseLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowercaseLetters = 'abcdefghijklmnopqrstuvwxyz';
+            const numbers = '0123456789';
+            const specialCharacters = '!@#$%^&*()_+';
+
+            const allCharacters = uppercaseLetters + lowercaseLetters + numbers + specialCharacters;
+
+            let password = '';
+            const minLength = 24;
+
+            // Ensure the password meets the minimum length requirement
+            while (password.length < minLength) {
+                const randomIndex = Math.floor(Math.random() * allCharacters.length);
+                password += allCharacters.charAt(randomIndex);
+            }
+
+            // Shuffle the password to mix characters
+            password = password.split('').sort(() => Math.random() - 0.5).join('');
+
+            // Set the generated password as the value of the input field
+            document.getElementById(inputId).value = password;
+}
+
+    function toggleSection(sectionId) {
+        var section = document.getElementById(sectionId);
+        if (section.classList.contains("hidden")) {
+            section.classList.remove("hidden");
+        } else {
+            section.classList.add("hidden");
+        }
+    }
+    function copyToClipboard(inputId) {
+        const inputElement = document.getElementById(inputId);
+        inputElement.select();
+        document.execCommand("copy");
+    }
+    function toggleDropdownMenu() {
+            var dropdownMenu = document.getElementById('dropdownMenu');
+            if (dropdownMenu.style.display === 'block') {
+                dropdownMenu.style.display = 'none';
+            } else {
+                dropdownMenu.style.display = 'block';
+            }
+        }
+</script>
+
+
+
+</body>
+</html>
